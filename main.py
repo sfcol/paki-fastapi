@@ -5,12 +5,29 @@ from typing import List
 
 from fastapi import FastAPI
 from pydantic import BaseModel, EmailStr
+from starlette.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class Contact(BaseModel):
-    id: int
+    id: uuid.UUID
+    email: EmailStr
     name: str
     picture: str
     favorite_boxes: List[uuid.UUID]
@@ -75,6 +92,19 @@ class ShipmentConfirmation(BaseModel):
     size: ShipmentSizes
     dropoff_date: date
     pickup_date: date
+
+
+requests = {}
+
+
+@app.get("/contacts/", response_model=List[Contact])
+async def get_all_contacts():
+    return [
+        Contact(id='bdd2ddf2-3b93-4c0c-b3eb-da16a389c64b', email='j.feinauer@pragmaticminds.de', name='Julian Feinauer',
+                picture='https://ca.slack-edge.com/T01BWJSLH9V-U01DL19HR6H-g799b8ba68f5-512', favorite_boxes=[]),
+        Contact(id='7b7f45ba-440f-496f-bd3e-b6c25ac6dde3', email='niklas@merz.de', name='Niklas Merz',
+                picture='https://ca.slack-edge.com/T01BWJSLH9V-U01DGBU5TE2-9c36519a20c7-512', favorite_boxes=[])
+    ]
 
 
 @app.get("/boxes/all", response_model=List[Box])
