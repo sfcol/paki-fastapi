@@ -120,6 +120,11 @@ async def get_all_boxes():
 
 @app.post("/requests/new")
 async def new_request(send_request: SendRequest):
+    """
+    This endpoint is used when A wants to send something to B
+    :param send_request:
+    :return:
+    """
     print(f'got send request: {send_request}')
     requests.append(send_request)
 
