@@ -43,15 +43,15 @@ class Box(BaseModel):
 
 
 class ShipmentSizes(str, Enum):
-    S: 'S'
-    M: 'M'
-    L: 'L'
-    XL: 'XL'
+    S = 'S'
+    M = 'M'
+    L = 'L'
+    XL = 'XL'
 
 
 class DropoffStatus(str, Enum):
-    ACCEPTED: 'accepted'
-    DENIED: 'denied'
+    ACCEPTED = 'accepted'
+    DENIED = 'denied'
 
 
 # Step 1
@@ -61,8 +61,8 @@ class SendRequest(BaseModel):
     Sender -> Backend -> Receiver
     """
     id: uuid.UUID
-    sender: EmailStr
-    receiver: EmailStr
+    sender: uuid.UUID
+    receiver: uuid.UUID
     box: uuid.UUID
     size: ShipmentSizes
     dropoff_date: date
@@ -94,7 +94,7 @@ class ShipmentConfirmation(BaseModel):
     pickup_date: date
 
 
-requests = {}
+requests = []
 
 
 @app.get("/contacts/", response_model=List[Contact])
@@ -112,14 +112,16 @@ async def get_all_contacts():
 @app.get("/boxes/all", response_model=List[Box])
 async def get_all_boxes():
     return [
-        Box(id='a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1', label="Die Box in Kirchheim", address="Irgendwo in Kirchheim", lat=1.0, lon=2.0),
+        Box(id='a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1', label="Die Box in Kirchheim", address="Irgendwo in Kirchheim",
+            lat=48.6355632, lon=9.4052465),
         Box(id='2bc06d25-067c-493f-a32a-79bcc2ba88ff', label="Die Box in Fulda", address="Irgendwo in Fulda", lat=50.4296862, lon=9.5423249),
     ]
 
 
 @app.post("/requests/new")
 async def new_request(send_request: SendRequest):
-    pass
+    print(f'got send request: {send_request}')
+    requests.append(send_request)
 
 
 @app.post("/requests/sent/count/{user_id}", response_model=int)
@@ -129,7 +131,7 @@ async def open_sent_requests_for_user(user_id: uuid.UUID):
     :param user_id:
     :return:
     """
-    return 1
+    return len(requests)
 
 
 @app.get('/requests/{user_id}', response_model=List[SendRequest])
