@@ -141,7 +141,9 @@ async def get_open_requests(user_id: uuid.UUID):
     :param user_id:
     :return:
     """
-    pass
+    response = [req for req in requests if req.receiver == user_id]
+    print(response)
+    return response
 
 
 @app.post("/responses/new")
