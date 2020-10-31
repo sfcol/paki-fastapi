@@ -101,24 +101,20 @@ requests = {}
 async def get_all_contacts():
     return [
         Contact(id='bdd2ddf2-3b93-4c0c-b3eb-da16a389c64b', email='j.feinauer@pragmaticminds.de', name='Julian Feinauer',
-                picture='https://ca.slack-edge.com/T01BWJSLH9V-U01DL19HR6H-g799b8ba68f5-512', favorite_boxes=[]),
+                picture='https://ca.slack-edge.com/T01BWJSLH9V-U01DL19HR6H-g799b8ba68f5-512',
+                favorite_boxes=['a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1']),
         Contact(id='7b7f45ba-440f-496f-bd3e-b6c25ac6dde3', email='niklas@merz.de', name='Niklas Merz',
-                picture='https://ca.slack-edge.com/T01BWJSLH9V-U01DGBU5TE2-9c36519a20c7-512', favorite_boxes=[])
+                picture='https://ca.slack-edge.com/T01BWJSLH9V-U01DGBU5TE2-9c36519a20c7-512',
+                favorite_boxes=['2bc06d25-067c-493f-a32a-79bcc2ba88ff'])
     ]
 
 
 @app.get("/boxes/all", response_model=List[Box])
 async def get_all_boxes():
     return [
-        Box(id=uuid.uuid4(), label="", address="", lat=1.0, lon=2.0),
-        Box(id=uuid.uuid4(), label="2", address="", lat=1.0, lon=2.0),
+        Box(id='a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1', label="Die Box in Kirchheim", address="Irgendwo in Kirchheim", lat=1.0, lon=2.0),
+        Box(id='2bc06d25-067c-493f-a32a-79bcc2ba88ff', label="Die Box in Fulda", address="Irgendwo in Fulda", lat=1.0, lon=2.0),
     ]
-
-
-@app.post("/boxes/new")
-async def get_all_boxes(box: Box):
-    print("Got a Box:")
-    print(box)
 
 
 @app.post("/requests/new")
