@@ -126,6 +126,16 @@ async def new_request(send_request: SendRequest):
     pass
 
 
+@app.post("/requests/sent/count/{user_id}", response_model=int)
+async def open_sent_requests_for_user(user_id: uuid.UUID):
+    """
+    Get Number of Open Sent Requetsts that wait for confirmation
+    :param user_id:
+    :return:
+    """
+    return 1
+
+
 @app.get('/requests/{user_id}', response_model=List[SendRequest])
 async def get_open_requests(user_id: uuid.UUID):
     """
