@@ -105,7 +105,7 @@ async def get_all_contacts():
                 favorite_boxes=['a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1']),
         Contact(id='7b7f45ba-440f-496f-bd3e-b6c25ac6dde3', email='niklas@merz.de', name='Niklas Merz',
                 picture='https://ca.slack-edge.com/T01BWJSLH9V-U01DGBU5TE2-9c36519a20c7-512',
-                favorite_boxes=['2bc06d25-067c-493f-a32a-79bcc2ba88ff'])
+                favorite_boxes=['a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1', '2bc06d25-067c-493f-a32a-79bcc2ba88ff'])
     ]
 
 
@@ -113,7 +113,7 @@ async def get_all_contacts():
 async def get_all_boxes():
     return [
         Box(id='a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1', label="Die Box in Kirchheim", address="Irgendwo in Kirchheim", lat=1.0, lon=2.0),
-        Box(id='2bc06d25-067c-493f-a32a-79bcc2ba88ff', label="Die Box in Fulda", address="Irgendwo in Fulda", lat=1.0, lon=2.0),
+        Box(id='2bc06d25-067c-493f-a32a-79bcc2ba88ff', label="Die Box in Fulda", address="Irgendwo in Fulda", lat=50.4296862, lon=9.5423249),
     ]
 
 
