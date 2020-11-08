@@ -3,9 +3,12 @@ from datetime import date
 from enum import Enum
 from typing import List
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, EmailStr
 from starlette.middleware.cors import CORSMiddleware
+from tortoise.contrib.fastapi import register_tortoise, HTTPNotFoundError
+
+from models import User, UserIn_Pydantic, User_Pydantic, Box_Pydantic, Box, BoxIn_Pydantic
 
 app = FastAPI()
 
@@ -31,15 +34,6 @@ class Contact(BaseModel):
     name: str
     picture: str
     favorite_boxes: List[uuid.UUID]
-
-
-class Box(BaseModel):
-    id: uuid.UUID
-    # Random "Name" of Station
-    label: str
-    address: str
-    lat: float
-    lon: float
 
 
 class ShipmentSizes(str, Enum):
@@ -97,8 +91,100 @@ class ShipmentConfirmation(BaseModel):
 requests = []
 
 
+#################################################################
+# User CRUD
+#################################################################
+
+@app.get("/users", response_model=List[User_Pydantic], tags=["user"])
+async def get_users():
+    return await User_Pydantic.from_queryset(User.all())
+
+
+@app.post("/user", response_model=User_Pydantic, tags=["user"])
+async def create_user(user: UserIn_Pydantic):
+    created_user = await User.create(**user.dict(exclude_unset=True))
+    return await User_Pydantic.from_tortoise_orm(created_user)
+
+
+@app.get(
+    "/user/{user_id}", response_model=User_Pydantic, responses={404: {"model": HTTPNotFoundError}}
+    , tags=["user"])
+async def get_user(user_id: int):
+    return await User_Pydantic.from_queryset_single(User.get(id=user_id))
+
+
+@app.put(
+    "/user/{user_id}", response_model=User_Pydantic, responses={404: {"model": HTTPNotFoundError}}
+    , tags=["user"])
+async def update_user(user_id: int, user: UserIn_Pydantic):
+    await User.filter(id=user_id).update(**user.dict(exclude_unset=True))
+    return await User_Pydantic.from_queryset_single(User.get(id=user_id))
+
+
+class Status(BaseModel):
+    message: str
+
+
+@app.delete("/user/{user_id}", response_model=Status, responses={404: {"model": HTTPNotFoundError}},
+            tags=["user"])
+async def delete_user(user_id: int):
+    deleted_count = await User.filter(id=user_id).delete()
+    if not deleted_count:
+        raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+    return Status(message=f"Deleted user {user_id}")
+
+
+# End User CRUD
+
+#################################################################
+# Box CRUD
+#################################################################
+
+@app.get("/boxes", response_model=List[Box_Pydantic], tags=["box"])
+async def get_boxes():
+    return await Box_Pydantic.from_queryset(Box.all())
+
+
+@app.post("/box", response_model=Box_Pydantic, tags=["box"])
+async def create_user(box: BoxIn_Pydantic):
+    created_box = await Box.create(**box.dict(exclude_unset=True))
+    return await Box_Pydantic.from_tortoise_orm(created_box)
+
+
+# @app.get(
+#     "/user/{user_id}", response_model=User_Pydantic, responses={404: {"model": HTTPNotFoundError}}
+# )
+# async def get_user(user_id: int):
+#     return await User_Pydantic.from_queryset_single(User.get(id=user_id))
+#
+#
+# @app.put(
+#     "/user/{user_id}", response_model=User_Pydantic, responses={404: {"model": HTTPNotFoundError}}
+# )
+# async def update_user(user_id: int, user: UserIn_Pydantic):
+#     await User.filter(id=user_id).update(**user.dict(exclude_unset=True))
+#     return await User_Pydantic.from_queryset_single(User.get(id=user_id))
+#
+#
+# class Status(BaseModel):
+#     message: str
+#
+#
+# @app.delete("/user/{user_id}", response_model=Status, responses={404: {"model": HTTPNotFoundError}})
+# async def delete_user(user_id: int):
+#     deleted_count = await User.filter(id=user_id).delete()
+#     if not deleted_count:
+#         raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+#     return Status(message=f"Deleted user {user_id}")
+
+
+# End Box CRUD
+
+
 @app.get("/contacts/", response_model=List[Contact])
 async def get_all_contacts():
+    user_count = await User.all().count()
+    print(f"Users are {user_count}")
     return [
         Contact(id='bdd2ddf2-3b93-4c0c-b3eb-da16a389c64b', email='j.feinauer@pragmaticminds.de', name='Julian Feinauer',
                 picture='https://ca.slack-edge.com/T01BWJSLH9V-U01DL19HR6H-g799b8ba68f5-512',
@@ -109,13 +195,15 @@ async def get_all_contacts():
     ]
 
 
-@app.get("/boxes/all", response_model=List[Box])
-async def get_all_boxes():
-    return [
-        Box(id='a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1', label="Die Box in Kirchheim", address="Irgendwo in Kirchheim",
-            lat=48.6355632, lon=9.4052465),
-        Box(id='2bc06d25-067c-493f-a32a-79bcc2ba88ff', label="Die Box in Fulda", address="Irgendwo in Fulda", lat=50.4296862, lon=9.5423249),
-    ]
+#
+# @app.get("/boxes/all", response_model=List[Box])
+# async def get_all_boxes():
+#     return [
+#         Box(id='a8f5e8ca-b55d-4f9e-9a98-145b62ad37b1', label="Die Box in Kirchheim", address="Irgendwo in Kirchheim",
+#             lat=48.6355632, lon=9.4052465),
+#         Box(id='2bc06d25-067c-493f-a32a-79bcc2ba88ff', label="Die Box in Fulda", address="Irgendwo in Fulda",
+#             lat=50.4296862, lon=9.5423249),
+#     ]
 
 
 @app.post("/requests/new")
@@ -174,3 +262,12 @@ async def contacts():
 @app.get("/shipment/{id}/delivery_code")
 async def get_delivery_code(id: uuid.UUID):
     return "Hier dein Code"
+
+
+register_tortoise(
+    app,
+    db_url="sqlite://:memory:",
+    modules={"models": ["models"]},
+    generate_schemas=True,
+    add_exception_handlers=True,
+)
