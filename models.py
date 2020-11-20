@@ -1,64 +1,68 @@
+from enum import Enum
+from uuid import UUID
+
+import tortoise
+from pydantic import BaseModel
 from tortoise import Model, fields, Tortoise, run_async
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.fields import CASCADE
 
 
-class User(Model):
-    id = fields.IntField(pk=True)
+class Customer(Model):
+    id = fields.UUIDField(pk=True)
     name = fields.CharField(max_length=255)
-    email = fields.CharField(max_length=255)
-
-
-User_Pydantic = pydantic_model_creator(User, name="User")
-UserIn_Pydantic = pydantic_model_creator(User, name="UserIn", exclude_readonly=True)
-
-
-# Box Model
-
-class Box(Model):
-    id = fields.UUIDField(pk=True)
-    label = fields.CharField(max_length=255)
     address = fields.CharField(max_length=255)
-    lat = fields.DecimalField(decimal_places=6, max_digits=9)
-    lon = fields.DecimalField(decimal_places=6, max_digits=9)
+    lat = fields.DecimalField(decimal_places=6, max_digits=9, null=True)
+    lon = fields.DecimalField(decimal_places=6, max_digits=9, null=True)
 
 
-Box_Pydantic = pydantic_model_creator(Box, name="Box")
-BoxIn_Pydantic = pydantic_model_creator(Box, name="BoxIn", exclude_readonly=True)
+Customer_Pydantic = pydantic_model_creator(Customer, name="Customer")
+CustomerIn_Pydantic = pydantic_model_creator(Customer, name="CustomerIn", exclude_readonly=True)
 
 
-class Delivery(Model):
+class ProductUnits(str, Enum):
+    WEIGHT_KG = 'KG'
+    VOLUME_LITER = 'L'
+    PIECE = 'PCS'
+
+
+class Handling(str, Enum):
+    REFRIGERATION = 'refrigeration'
+    NONE = 'none'
+
+
+class Product(Model):
     id = fields.UUIDField(pk=True)
-    sender = fields.ForeignKeyField("models.User", "deliveries_as_sender", on_delete=CASCADE, null=False)
-    receiver = fields.ForeignKeyField("models.User", "deliveries_as_receiver", on_delete=CASCADE, null=False)
+    name = fields.CharField(max_length=255)
+    description = fields.CharField(max_length=255)
+    image = fields.CharField(max_length=255)
+    unit = ProductUnits
+    handling = Handling
 
 
-Delivery_Pydantic = pydantic_model_creator(Delivery, name="Delivery")
-DeliveryIn_Pydantic = pydantic_model_creator(Delivery, name="DeliveryIn", exclude_readonly=True)
+Product_Pydantic = pydantic_model_creator(Product, name="Product")
+ProductIn_Pydantic = pydantic_model_creator(Product, name="ProductIn", exclude_readonly=True)
 
 
-async def init():
-    await Tortoise.init(
-        db_url='sqlite://db.sqlite3',
-        modules={'models': ['__main__']}
-    )
-
-    await Tortoise.generate_schemas()
+class ProductionCapability(Model):
+    id = fields.UUIDField(pk=True)
+    farm = fields.ForeignKeyField("models.Customer", related_name="capabilities", on_delete=fields.CASCADE)
+    product = fields.ForeignKeyField("models.Product", related_name="capabilities", on_delete=fields.CASCADE)
+    monthly_quantity = fields.DecimalField(decimal_places=6, max_digits=9, null=False)
 
 
-async def do_something():
-    # tournament = Tournament(name='my tourn')
-    print("Start Storing...")
-    # await tournament.save()
-    print("Stored!")
+tortoise.Tortoise.init_models(["models"], "models")
+
+Capability_Pydantic = pydantic_model_creator(ProductionCapability, name="Capability")
+CapabilityIn_Pydantic = pydantic_model_creator(ProductionCapability, name="CapabilityIn", exclude_readonly=True)
 
 
-async def main():
-    await init()
-    await do_something()
+class Policy(Model):
+    id = fields.UUIDField(pk=True)
+    capability = fields.ForeignKeyField("models.ProductionCapability", related_name="policies", on_delete=CASCADE)
+    price = fields.DecimalField(decimal_places=6, max_digits=9, null=False)
+    due_date = fields.DateField()
 
 
-if __name__ == "__main__":
-    print("Starting...")
-    run_async(main())
-    print("Finished...")
+Policy_Pydantic = pydantic_model_creator(Policy, name="Policy")
+PolicyIn_Pydantic = pydantic_model_creator(Policy, name="PolicyIn", exclude_readonly=True)
