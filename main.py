@@ -249,6 +249,8 @@ async def get_open_responses(user_id: uuid.UUID):
     pass
 
 
+
+
 @app.post("/confirmations/{user_id}", response_model=List[ShipmentConfirmation])
 async def get_open_confirmations(user_id: uuid.UUID):
     pass
