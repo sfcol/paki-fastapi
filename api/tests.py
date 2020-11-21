@@ -4,7 +4,7 @@ from uuid import UUID
 from django.test import TestCase
 
 from api import api
-from api.models import Customer, Product, ProductionCapability
+from api.models import Customer, Product, ProductionCapability, Batch, Policy
 
 
 class TestPydantic(TestCase):
@@ -14,6 +14,10 @@ class TestPydantic(TestCase):
         self.product = Product.objects.create(name="Kartoffel", description="", image="", unit="kg", handling="none")
         self.capability = ProductionCapability.objects.create(farm=self.customer, product=self.product,
                                                               monthly_quantity=15)
+        self.batch = Batch.objects.create(capability=self.capability, details="", comment="", expected_amount=15.0,
+                                          production_price=100.0, expected_price=150.0,
+                                          expected_ready_date=datetime.datetime.today())
+        self.policy = Policy.objects.create(batch=self.batch, hedged_price=100.0, due_date=datetime.datetime.today())
 
     def test_create_capability(self):
         cap_in = api.CapabilityIn_Pydantic(farm=self.customer.id, product=self.product.id, monthly_quantity=5)
@@ -29,3 +33,10 @@ class TestPydantic(TestCase):
 
         self.assertIsNotNone(response.id)
         self.assertIsInstance(response.capability, UUID)
+
+    def test_create_damage_report(self):
+        damage_report_in = api.DamageReportIn(policy=self.policy.id)
+        response = api.create_damage_report(damage_report_in)
+
+        self.assertIsNotNone(response.id)
+
