@@ -1,9 +1,12 @@
+import uuid
 from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter
+from pydantic.main import BaseModel
 from pydantic_django import PydanticDjangoModel
 
+from api import models
 from api.models import Customer, Product, ProductionCapability, Batch, Policy
 
 router = APIRouter()
@@ -138,3 +141,21 @@ def get_products():
 def create_customer(product: ProductIn_Pydantic):
     created_product = Product.objects.create(**product.dict(exclude_unset=True))
     return Product_Pydantic.from_django(created_product)
+
+
+class DamageReportIn(PydanticDjangoModel):
+    class Config:
+        model = models.DamageReport
+        exclude = ["id", "date_submitted"]
+
+
+class DamageReport(PydanticDjangoModel):
+    class Config:
+        model = models.DamageReport
+
+
+@router.post("/damage", response_model=DamageReport, tags=["insurance"])
+def create_damage_report(damage_report: DamageReportIn):
+    created = models.DamageReport.objects.create(**damage_report.dict(exclude_unset=True, exclude={"policy"}),
+                                                 policy_id=damage_report.policy)
+    return DamageReport.from_django(created)

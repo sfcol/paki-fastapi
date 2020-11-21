@@ -44,6 +44,9 @@ class Product(models.Model):
     unit = models.CharField(max_length=255)
     handling = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.name
+
 
 class ProductionCapability(models.Model):
     """
@@ -78,3 +81,11 @@ class Policy(models.Model):
     hedged_price = models.DecimalField(decimal_places=6, max_digits=9, null=False)
     due_date = models.DateField()
 
+
+class DamageReport(models.Model):
+    """
+    A Reported Damage
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    policy = models.ForeignKey(Policy, related_name="reports", on_delete=models.CASCADE)
+    date_submitted = models.DateTimeField(auto_now=True)
