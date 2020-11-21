@@ -1,14 +1,15 @@
 from enum import Enum
-from uuid import UUID
 
 import tortoise
-from pydantic import BaseModel
-from tortoise import Model, fields, Tortoise, run_async
+from tortoise import Model, fields
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.fields import CASCADE
 
 
 class Customer(Model):
+    """
+    Customer of the App / the SFC
+    """
     id = fields.UUIDField(pk=True)
     name = fields.CharField(max_length=255)
     address = fields.CharField(max_length=255)
@@ -21,17 +22,26 @@ CustomerIn_Pydantic = pydantic_model_creator(Customer, name="CustomerIn", exclud
 
 
 class ProductUnits(str, Enum):
+    """
+    Unit in which the product is measured
+    """
     WEIGHT_KG = 'KG'
     VOLUME_LITER = 'L'
     PIECE = 'PCS'
 
 
 class Handling(str, Enum):
+    """
+    Does the Product need special handling?
+    """
     REFRIGERATION = 'refrigeration'
     NONE = 'none'
 
 
 class Product(Model):
+    """
+    One product which is supported for a policy like e.g. wheat, meat, ...
+    """
     id = fields.UUIDField(pk=True)
     name = fields.CharField(max_length=255)
     description = fields.CharField(max_length=255)
@@ -45,6 +55,9 @@ ProductIn_Pydantic = pydantic_model_creator(Product, name="ProductIn", exclude_r
 
 
 class ProductionCapability(Model):
+    """
+    A capability means that a farm (a Customer) produces one kind of Product.
+    """
     id = fields.UUIDField(pk=True)
     farm = fields.ForeignKeyField("models.Customer", related_name="capabilities", on_delete=fields.CASCADE)
     product = fields.ForeignKeyField("models.Product", related_name="capabilities", on_delete=fields.CASCADE)
@@ -58,6 +71,9 @@ CapabilityIn_Pydantic = pydantic_model_creator(ProductionCapability, name="Capab
 
 
 class Policy(Model):
+    """
+    A policy is a PUT Option on a (defined) production amount that should be ready for delivery at a specific due date
+    """
     id = fields.UUIDField(pk=True)
     capability = fields.ForeignKeyField("models.ProductionCapability", related_name="policies", on_delete=CASCADE)
     price = fields.DecimalField(decimal_places=6, max_digits=9, null=False)
