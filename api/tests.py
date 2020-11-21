@@ -4,7 +4,7 @@ from uuid import UUID
 from django.test import TestCase
 
 from api import api
-from api.models import Customer, Product, ProductionCapability, Batch, Policy
+from api.models import Customer, Product, ProductionCapability, Batch, Policy, DamageReport
 
 
 class TestPydantic(TestCase):
@@ -40,3 +40,10 @@ class TestPydantic(TestCase):
 
         self.assertIsNotNone(response.id)
 
+    def test_get_damage_reports(self):
+        report = DamageReport.objects.create(policy=self.policy)
+
+        reports = api.get_damage_reports_for_user(self.customer.id)
+
+        self.assertEqual(1, len(reports))
+        self.assertEqual(report.id, reports[0].id)

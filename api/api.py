@@ -1,9 +1,7 @@
-import uuid
 from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter
-from pydantic.main import BaseModel
 from pydantic_django import PydanticDjangoModel
 
 from api import models
@@ -65,6 +63,17 @@ class PolicyIn_Pydantic(PydanticDjangoModel):
     class Config:
         model = Policy
         exclude = ["id"]
+
+
+class DamageReportIn(PydanticDjangoModel):
+    class Config:
+        model = models.DamageReport
+        exclude = ["id", "date_submitted"]
+
+
+class DamageReport(PydanticDjangoModel):
+    class Config:
+        model = models.DamageReport
 
 
 @router.get("/customers", response_model=List[Customer_Pydantic], tags=["customer"])
@@ -143,19 +152,14 @@ def create_customer(product: ProductIn_Pydantic):
     return Product_Pydantic.from_django(created_product)
 
 
-class DamageReportIn(PydanticDjangoModel):
-    class Config:
-        model = models.DamageReport
-        exclude = ["id", "date_submitted"]
-
-
-class DamageReport(PydanticDjangoModel):
-    class Config:
-        model = models.DamageReport
-
-
 @router.post("/damage", response_model=DamageReport, tags=["insurance"])
 def create_damage_report(damage_report: DamageReportIn):
     created = models.DamageReport.objects.create(**damage_report.dict(exclude_unset=True, exclude={"policy"}),
                                                  policy_id=damage_report.policy)
     return DamageReport.from_django(created)
+
+
+@router.get("/customer/{customer_id}/reports", response_model=List[DamageReport], tags=["customer"])
+def get_damage_reports_for_user(customer_id: UUID):
+    policies = models.DamageReport.objects.filter(policy__batch__capability__farm__id=customer_id)
+    return list(map(lambda policy: DamageReport.from_django(policy), policies))
