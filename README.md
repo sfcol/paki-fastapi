@@ -1,8 +1,13 @@
 # Start Server
 
 ```
-uvicorn main:app --reload
+ uvicorn sfc_backend.asgi:app --debug
 ```
+
+
+The Django App can be found under `/django/`, especially admin can be found under `/django/admin``
+
+The OpenAPI API can be found under `/api` and the docs under `/api/docs`.
 
 ## How to generate openapi clients (e.g. angular)
 
