@@ -3,3 +3,6 @@ fastapi[all]==0.61.2
 tortoise-orm==0.16.17
 pytest==6.1.2
 asynctest==0.13.0
+# Experimental
+pydantic-django==0.0.6
+django==3.1.3

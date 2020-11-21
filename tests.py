@@ -1,6 +1,6 @@
 from tortoise.contrib.test import TestCase
 
-from models import User
+from api.models import User
 
 
 def test_something():
