@@ -1,16 +1,13 @@
-from enum import Enum
 from typing import List
 from uuid import UUID
 
-import tortoise
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from tortoise import Model, fields
 from tortoise.contrib.fastapi import register_tortoise, HTTPNotFoundError
-from tortoise.contrib.pydantic import pydantic_model_creator
 
 from models import Customer_Pydantic, CustomerIn_Pydantic, Customer, Capability_Pydantic, CapabilityIn_Pydantic, \
-    ProductionCapability, Product_Pydantic, Product, ProductIn_Pydantic, Policy_Pydantic, Policy, PolicyIn_Pydantic
+    ProductionCapability, Product_Pydantic, Product, ProductIn_Pydantic, Policy_Pydantic, Policy, PolicyIn_Pydantic, \
+    Batch_Pydantic, Batch, BatchIn_Pydantic
 
 app = FastAPI()
 
@@ -59,26 +56,45 @@ async def update_customer(customer_id: UUID, customer: CustomerIn_Pydantic):
     return await Customer_Pydantic.from_queryset_single(Customer.get(id=customer_id))
 
 
+@app.get(
+    "/customer/{customer_id}/batches", response_model=List[Batch_Pydantic],
+    responses={404: {"model": HTTPNotFoundError}}
+    , tags=["customer"])
+async def get_customer_batches(customer_id: UUID):
+    return await Batch_Pydantic.from_queryset(Batch.filter(batch__capability__farm__id=customer_id))
+
+
 @app.post("/capability", response_model=Capability_Pydantic, tags=["customer"])
-async def create_customer(capability: CapabilityIn_Pydantic):
+async def create_capability(capability: CapabilityIn_Pydantic):
     created_capability = await ProductionCapability.create(**capability.dict(exclude_unset=True))
     return await Capability_Pydantic.from_tortoise_orm(created_capability)
 
 
-@app.get("/policies", response_model=List[Policy_Pydantic], tags=["customer"])
+@app.post("/batches", response_model=List[Batch_Pydantic], tags=["policy"])
+async def get_batches():
+    return await Batch_Pydantic.from_queryset(Batch.all())
+
+
+@app.post("/batch", response_model=Batch_Pydantic, tags=["policy"])
+async def create_batch(batch: BatchIn_Pydantic):
+    created_batch = await Batch.create(**batch.dict(exclude_unset=True))
+    return await Capability_Pydantic.from_tortoise_orm(created_batch)
+
+
+@app.get("/policies", response_model=List[Policy_Pydantic], tags=["policy"])
 async def get_policy():
     return await Policy_Pydantic.from_queryset(Policy.all())
 
 
-@app.post("/policy", response_model=Policy_Pydantic, tags=["customer"])
-async def create_customer(policy: PolicyIn_Pydantic):
+@app.post("/policy", response_model=Policy_Pydantic, tags=["policy"])
+async def create_policy(policy: PolicyIn_Pydantic):
     created_policy = await Policy.create(**policy.dict(exclude_unset=True))
     return await Policy_Pydantic.from_tortoise_orm(created_policy)
 
 
 @app.get(
     "/policy/{policy_id}", response_model=Policy_Pydantic, responses={404: {"model": HTTPNotFoundError}}
-    , tags=["customer"])
+    , tags=["policy"])
 async def get_policy(policy_id: UUID):
     return await Policy_Pydantic.from_queryset_single(Policy.get(id=policy_id))
 

@@ -71,15 +71,40 @@ Capability_Pydantic = pydantic_model_creator(ProductionCapability, name="Capabil
 CapabilityIn_Pydantic = pydantic_model_creator(ProductionCapability, name="CapabilityIn", exclude_readonly=True)
 
 
+class Batch(Model):
+    """
+    A Batch of production
+    """
+    id = fields.UUIDField(pk=True)
+    capability = fields.ForeignKeyField("models.ProductionCapability", related_name="batches", on_delete=fields.CASCADE)
+    details = fields.CharField(max_length=255)
+    comment = fields.CharField(max_length=255)
+    expected_amount = fields.DecimalField(decimal_places=6, max_digits=9, null=False)
+    production_price = fields.DecimalField(decimal_places=6, max_digits=9, null=False)
+    expected_price = fields.DecimalField(decimal_places=6, max_digits=9, null=False)
+    expected_ready_date = fields.DateField()
+
+
+tortoise.Tortoise.init_models(["models"], "models")
+
+Batch_Pydantic = pydantic_model_creator(Batch, name="Batch")
+BatchIn_Pydantic = pydantic_model_creator(Batch, name="BatchIn", exclude_readonly=True)
+
+
 class Policy(Model):
     """
     A policy is a PUT Option on a (defined) production amount that should be ready for delivery at a specific due date
     """
     id = fields.UUIDField(pk=True)
-    capability = fields.ForeignKeyField("models.ProductionCapability", related_name="policies", on_delete=CASCADE)
-    price = fields.DecimalField(decimal_places=6, max_digits=9, null=False)
+    batch = fields.OneToOneField("models.Batch", related_name="policy", on_delete=CASCADE)
+    hedged_price = fields.DecimalField(decimal_places=6, max_digits=9, null=False)
     due_date = fields.DateField()
 
 
 Policy_Pydantic = pydantic_model_creator(Policy, name="Policy")
 PolicyIn_Pydantic = pydantic_model_creator(Policy, name="PolicyIn", exclude_readonly=True)
+
+"""
+Example Potatoes:
+During Seeding -> Create a Batch -> Create a Policy
+"""
