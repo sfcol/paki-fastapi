@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -120,7 +121,8 @@ USE_TZ = True
 
 STATIC_URL = "/django/static/"
 
-STATIC_ROOT = ""
+STATIC_ROOT = Path(BASE_DIR).joinpath('staticfiles')
+STATICFILES_DIRS = (Path(BASE_DIR).joinpath('static'),)
 
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
