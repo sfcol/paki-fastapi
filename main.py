@@ -38,7 +38,7 @@ async def get_customers():
     return await Customer_Pydantic.from_queryset(Customer.all())
 
 
-@app.post("/customer", response_model=Customer_Pydantic, tags=["customer"])
+@app.post("/customer", response_model=Customer_Pydantic, tags=["customer"], operation_id="create_customer")
 async def create_customer(customer: CustomerIn_Pydantic):
     created_customer = await Customer.create(**customer.dict(exclude_unset=True))
     return await Customer_Pydantic.from_tortoise_orm(created_customer)
