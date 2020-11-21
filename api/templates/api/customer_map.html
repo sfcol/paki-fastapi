@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block js %}
+    <link href="{% static 'js/lib/leaflet/dist/leaflet.css' %}" rel="stylesheet" crossorigin="anonymous"/>
+{% endblock %}
+
+{% block content %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <div id="mapid" style="height: 750px;"></div>
+        </div>
+    <script src="{% static 'js/lib/leaflet/dist/leaflet.js' %}" crossorigin="anonymous"></script>
+    <script>
+        var mymap = L.map('mapid').setView([48.6464, 9.4501], 5);
+
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox/streets-v11',
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: 'pk.eyJ1IjoiamZlaW5hdWVyIiwiYSI6ImNraDZlbTcybTBkazMydXVpc3Myc21pbjUifQ.gzUAzpmQTokV1Wn2V3_P4g'
+        }).addTo(mymap);
+
+        L.control.scale().addTo(mymap);
+
+
+        var markers = {}
+        {% for entry in entries %}
+            {% if entry.lat and entry.lon %}
+                markers['{{ entry.id }}'] = L.marker({lat: {{ entry.lat }}, lon: {{entry.lon}}})
+                    .addTo(mymap)
+                    .bindPopup('<b>{{ entry.name }}</b> {{ entry.location }}<br><a href="{% url "machine_detail" entry.id %}">Details</a>');
+            {% endif %}
+        {% endfor %}
+
+        function registerHandler() {
+            var table = $('#dataTable').bootstrapTable();
+
+
+            $('#dataTable').on('click-row.bs.table', function (e, row) {
+                let marker = markers[row['0']];
+                mymap.setView(marker.getLatLng(), 13)
+                marker.openPopup();
+            });
+        }
+
+        // Attach Click HAndler for Data Table
+        $(document).on('turbolinks:load', function() {
+            registerHandler();
+        });
+
+        jQuery(function ($) {
+            registerHandler();
+        });
+    </script>
+{% endblock %}

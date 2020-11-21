@@ -1,0 +1,160 @@
+{% load bootstrap4 static compress i18n %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>{{ title }}</title>
+        <link rel="shortcut icon" type="image/png" href="{% static 'core/favicon.ico' %}"/>
+
+        <!-- jQuery -->
+        <script src="{% static 'js/lib/jquery/dist/jquery.js' %}" crossorigin="anonymous"></script>
+
+        <!-- Font Awesome -->
+        <script src="{% static 'js/lib/@fortawesome/fontawesome-free/js/all.min.js' %}" crossorigin="anonymous"></script>
+{#        <script src="{% static 'js/lib/popper.js/dist/popper.min.js' %}" crossorigin="anonymous"></script>#}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.5/umd/popper.min.js" crossorigin="anonymous"></script>
+
+        <!-- Bootstrap -->
+        <script src="{% static 'js/lib/bootstrap/dist/js/bootstrap.bundle.js' %}" crossorigin="anonymous"></script>
+
+        <!-- Moment JS (for DateTime Picker) -->
+        <script src="{% static 'js/lib/moment/min/moment.min.js' %}" crossorigin="anonymous"></script>
+
+        <!-- Date time Picker -->
+        <script src="{% static 'js/lib/tempusdominus-bootstrap-4/build/js/tempusdominus-bootstrap-4.js' %}" crossorigin="anonymous"></script>
+        <link href="{% static 'js/lib/tempusdominus-bootstrap-4/build/css/tempusdominus-bootstrap-4.css' %}" rel="stylesheet" crossorigin="anonymous" />
+
+        <!-- Turbolinks -->
+{#        <script src="{% static 'js/lib/turbolinks/dist/turbolinks.js' %}"></script>#}
+
+        <!-- Custom js -->
+        <script src="{% static "core/js/scripts.js" %}"></script>
+
+        <!-- CSS -->
+        <link href="{% static 'js/lib/bootstrap-table/dist/bootstrap-table.min.css' %}" rel="stylesheet" crossorigin="anonymous" />
+        <link href="{% static 'js/lib/@fortawesome/fontawesome-free/css/all.min.css' %}" rel="stylesheet" crossorigin="anonymous" />
+        {% compress css %}
+            <link type="text/x-scss" href="{% static 'core/scss/styles.scss' %}" rel="stylesheet" media="screen">
+        {% endcompress %}
+
+        {% block js %}{% endblock %}
+    </head>
+    <body class="sb-nav-fixed">
+        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+            <a class="navbar-brand" href="{% url 'index' %}">DC Portal</a>
+            <button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
+            <!-- Navbar Search-->
+{#            <form class="d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">#}
+{#                <div class="input-group">#}
+{#                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2" />#}
+{#                    <div class="input-group-append">#}
+{#                        <button class="btn btn-primary" type="button"><i class="fas fa-search"></i></button>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </form>#}
+            <!-- Navbar-->
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        {% if user.is_authenticated %}
+                            <a class="nav-link dropdown-toggle" id="userDropdown" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="#">Settings</a>
+                                {% if user.is_superuser %}
+                                    <a class="dropdown-item" href="{% url 'admin:index' %}">Administration</a>
+                                {% endif %}
+                                <div class="dropdown-divider"></div>
+                                <a id="logout-link" class="dropdown-item" href="{% url "logout" %}">{% translate "Logout" %}</a>
+                            </div>
+                        {% else %}
+                            {% with request.resolver_match.view_name as view_name %}
+                                <a class="sb-nav-link-icon" href="{% url 'login' %}?next_view={{ view_name }}" role="button">
+                                <i class="fas fa-sign-in-alt fa-fw"></i>
+                            </a>
+                            {% endwith %}
+                        {% endif %}
+                    </li>
+                </ul>
+
+        </nav>
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav">
+                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                    <div class="sb-sidenav-menu">
+                        <div class="nav">
+                            {% for nav in navigation %}
+                                <div class="sb-sidenav-menu-heading">{{ nav.category }}</div>
+                                    {% for entry in nav.entries %}
+                                        <a class="nav-link" href="{{ entry.target }}">
+                                            <div class="sb-nav-link-icon"><i class="fas {% if entry.icon %}{{ entry.icon }}{% else %}fa-tachometer-alt{% endif %}"></i></div>
+                                            {{ entry.label }}
+                                        </a>
+                                    {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="sb-sidenav-footer">
+                        {% load tags %}
+                            <div class="small">Commit:
+                                {% get_git_revision request %}
+                            </div>
+                            <div class="small">Built:
+                                {% get_build_date request %}
+                            </div>
+                        {% if user.is_authenticated %}
+                        <div class="small">Logged in as:
+                            {{ user.email }}
+                        </div>
+                        {% else %}
+                        <div class="small">Not Logged in.</div>
+                        <a class="small" href="{% url 'login' %}">Log in.</a>
+                        {% endif %}
+                    </div>
+                </nav>
+            </div>
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid">
+                        <h1 class="mt-4">{{ title }}</h1>
+                            {% if breadcrumb %}
+                                <ol class="breadcrumb mb-4">
+                                    {% for item in breadcrumb %}
+                                        <li class="breadcrumb-item">
+                                            <a href="{{ item.url }}">{{ item.title }}</a>
+                                        </li>
+                                    {% endfor %}
+                                    <li class="breadcrumb-item active">
+                                        {{ title }}
+                                    </li>
+                                </ol>
+                            {% else %}
+                                <ol class="breadcrumb mb-4">
+                                    <li class="breadcrumb-item active">{{ title }}</li>
+                                </ol>
+                            {% endif %}
+                            {% block content %}
+                            {% endblock %}
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright &copy; pragmatic industries GmbH 2020</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                &middot;
+                                <a href="#">Terms &amp; Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <!-- Needs to be here for Turbolinks -->
+        <!-- Bootstrap Datatables -->
+        <script src="{% static 'js/lib/bootstrap-table/dist/bootstrap-table.min.js' %}" crossorigin="anonymous"></script>
+    </body>
+</html>
