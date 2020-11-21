@@ -106,13 +106,13 @@ def get_batches():
     return list(map(lambda batch: Batch_Pydantic.from_django(batch), Batch.objects.all()))
 
 
-@router.post("/batch", response_model=Batch_Pydantic, tags=["policy"])
+@router.post("/batch", response_model=Batch_Pydantic, tags=["batch"])
 def create_batch(batch: BatchIn_Pydantic):
     created_batch = Batch.objects.create(**batch.dict(exclude_unset=True))
     return Batch_Pydantic.from_django(created_batch)
 
 
-@router.get("/policies", response_model=List[Policy_Pydantic], tags=["policy"])
+@router.get("/policies", response_model=List[Policy_Pydantic], tags=["batch"])
 def get_policies():
     return list(map(lambda policy: Policy_Pydantic.from_django(policy), Policy.objects.all()))
 
