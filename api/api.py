@@ -94,10 +94,9 @@ def get_customer_batches(customer_id: UUID):
 
 @router.post("/capability", response_model=Capability_Pydantic, tags=["customer"])
 def create_capability(capability: CapabilityIn_Pydantic):
-    farm = Customer.objects.get(id=capability.farm)
-    product = Product.objects.get(id=capability.product)
     created_capability = ProductionCapability.objects.create(
-        **capability.dict(exclude_unset=True, exclude={"farm", "product"}), farm=farm, product=product)
+        **capability.dict(exclude_unset=True, exclude={"farm", "product"}),
+        farm_id=capability.farm, product_id=capability.product)
     return Capability_Pydantic.from_django(created_capability)
 
 
@@ -108,7 +107,8 @@ def get_batches():
 
 @router.post("/batch", response_model=Batch_Pydantic, tags=["batch"])
 def create_batch(batch: BatchIn_Pydantic):
-    created_batch = Batch.objects.create(**batch.dict(exclude_unset=True))
+    created_batch = Batch.objects.create(**batch.dict(exclude_unset=True, exclude={"capability"}),
+                                         capability_id=batch.capability)
     return Batch_Pydantic.from_django(created_batch)
 
 
