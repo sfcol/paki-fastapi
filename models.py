@@ -12,6 +12,7 @@ class Customer(Model):
     """
     id = fields.UUIDField(pk=True)
     name = fields.CharField(max_length=255)
+    image = fields.CharField(max_length=255)
     address = fields.CharField(max_length=255)
     lat = fields.DecimalField(decimal_places=6, max_digits=9, null=True)
     lon = fields.DecimalField(decimal_places=6, max_digits=9, null=True)
