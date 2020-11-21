@@ -120,6 +120,8 @@ USE_TZ = True
 
 STATIC_URL = "/django/static/"
 
+STATIC_ROOT = ""
+
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
